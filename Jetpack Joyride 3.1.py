@@ -1,16 +1,16 @@
-import pygame, sys, random, os
+import pygame, sys, random, os, glob
 from pygame.locals import *
 from pygame import surface
 from math import fabs
 from time import sleep
-mute = True#False
+mute = False
 speed = 7
 pygame.init()
 pygame.display.init()
-screen = pygame.display.set_mode((1024, 768))#, RESIZABLE)
+screen = pygame.display.set_mode((1024, 768))#,  FULLSCREEN)
 pygame.display.set_caption("Jetpack Joyride")
 try:
-    pygame.display.set_icon(pygame.image.load(r"C:\Users\Facundo\Google Drive (Ari)\Jetpack Joyride\Img1\icon.png"))
+    pygame.display.set_icon(pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/icon.png"))
 except Exception as x:
     input(x)
 width= 1024
@@ -18,6 +18,31 @@ height = 768
 score = 0
 global ralt, lalt, f4
 ralt, lalt, f4 = 0, 0, 0
+def rcform():
+    d=random.choice(glob.glob(os.path.dirname(sys.argv[0])+"/Img1/formations/*.txt"))
+    text=open(d, 'r').readlines()
+#    print(d)
+#    print(text)
+    coinh=pygame.image.load(os.path.dirname(sys.argv[0])+'/Img1/Coin01.png').get_height()
+    height=len(text[0].strip())
+    coors=[]
+    for y in range(len(text)):
+#        print('from', text[y].strip(), 'to', text[y].strip()[::-1])
+        text[y]=text[y].strip()[::-1]
+        for x in range(len(text[y].strip() )):
+#            print(text[y][x])
+            if text[y][x]=='1':
+                coors.append([y, x])
+    
+    cbuffer=(screen.get_height()-(coinh*height))/2
+    realcoors=[]
+    for i in coors:
+#        print(i)
+        realcoors.append([i[0]*coinh+screen.get_width(), (i[1]*coinh)+cbuffer])
+    return realcoors
+#for i in rcform():
+#    print(i)
+    
 
 def crop(surface, rect):
     cropped = pygame.Surface((rect.width, rect.height))
@@ -73,7 +98,7 @@ def FinalSpin():
     prizes=[]
     prizesurf=[]
     prizesurfn=[r"Img1\spin\3 spin tokens.png", r"Img1\spin\1 coin.png", r"Img1\spin\heart.png", r"Img1\spin\3 coins.png", r"Img1\spin\stack of coins.png"]#, r"Img1\spin\double coins.png", r"Img1\spin\speed.png"]
-#    prizesurfn=[r"Img1\spin\heart.png"]
+#    prizesurfn=[r"Img1\spin\speed.png"]
     for i in prizesurfn:
         i = prizesurf.append(pygame.image.load(os.path.dirname(sys.argv[0])+"/"+i))
 
@@ -234,7 +259,7 @@ def FinalSpin():
                             spinningsound.stop()
                         if not mute:
                             winsound.play()
-#                        print(winners[0])
+                        #print(winners[0])
                         if winners[0]==r"Img1\spin\3 spin tokens.png":
                             spintokens+=3
                             print("added 3 spin tokens")
@@ -347,13 +372,38 @@ except:
         
     
 def thestash():
-    global ralt, lalt, f4
-    global stash, screen
-    stash = pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/the stash.png")
+    global ralt, lalt, f4, money
+    global stash, screen, verysmallfont, costume, costumeface, steveimages
+    screen.fill((0, 0, 0))
+    cbg=pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/clothing1/scroll.png")
+    cfg=pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/clothing1/ontop.png")
+    scroll=pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/clothing1/scrollbar.png")
     end = False
-    while end == False:
-
+    scrolly=77
+    schange=0
+    scrolldown=0
+    scrollby=    ((-((scrolly-(screen.get_height()-cbg.get_height()))/448)+1)   *(screen.get_height()-145-76))+76
+    pygame.key.get_focused()
+    moneys = verysmallfont.render(str(int(money)), 1, (255, 255, 255))
+    back=pygame.Rect(55, 6, 101, 64)
+    while not end:
+        state=pygame.mouse.get_pressed()
+        #print(state)
         ev = pygame.event.get()
+        if scrolldown:# and pygame.mouse.get_rel()!=(0, 0):
+            pos = pygame.mouse.get_pos()
+            #if pos[0]>946 and pos[0]<964:
+            if pos[1]<(scrollby+(72)) and pos[1]>76:
+                    #print('down', pos[1], (scrollby+(scroll.get_width()/2)))
+                scrolly+=fabs(pos[1]-(scrollby+(72)))/10
+                if scrolly>76:
+                    scrolly=76
+            elif pos[1]>(scrollby+(72)):
+                    #print('up', pos[1], (scrollby+(scroll.get_width()/2)))
+                scrolly-=fabs(pos[1]-(scrollby+(72)))/10
+                if scrolly<screen.get_height()-cbg.get_height():
+                    scrolly=screen.get_height()-cbg.get_height()
+                    
 
         for event in ev:
 
@@ -361,16 +411,47 @@ def thestash():
                 endall()
                 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                b=event.button
+                if b==4:
+                    scrolly+=14
+                    if scrolly>76:
+                        scrolly=76
+                elif b==5:
+                    scrolly-=14
+                    if scrolly<screen.get_height()-cbg.get_height():
+                        scrolly=screen.get_height()-cbg.get_height()
                 pos = pygame.mouse.get_pos()
-
-                if pos[0]>55 and pos[0]<155 and pos[1] >5 and pos[1]<68:
-                    end = True
-                    screen.blit(pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/screenshot.bmp"), (0, 0))
-                    screen.blit(pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/darker screen.png"),(0,0))
-                elif pos[0]>55 and pos[0]<254 and pos[1] >224 and pos[1]<423:
-                    print("you want to see clothing")
-
-
+                if back.collidepoint(pos):
+                    end=True
+                if pos[0]>946 and pos[0]<964 and pos[1]>76:
+                    scrolldown=1
+                elif event.button==1 and pos[1]> 76:
+                    112
+                    boxes=list(range(0, cbg.get_height(), 112))+[cbg.get_height()]
+                    #print(boxes)
+                    for i in range(len(boxes)):
+                        if pos[1]-scrolly < boxes[i]:
+                            box=i-1
+                            break
+                    cfolders=['Original face', 'Original body', 'fragger helmet', 'Fragger Fatigues', 'non existent nerd glasses', 'Lab Coat', 'Powered Up Hair', 'Super Suit', 'Kingly Crown', 'Royal Robes']
+                    cprices=[0, 0, 4000, 3000, 4500, 3000, 9000, 8000, 20000, 18000]
+                    if money>cprices[box]:
+                        money-=cprices[box]
+                        moneys = verysmallfont.render(str(int(money)), 1, (255, 255, 255))
+                        print('bought:', cfolders[box])
+                        if not box % 2:
+                            costumeface = cfolders[box]
+                            print('face', cfolders[box])
+                            steveimages = [blitedcostume("walk1.png"), blitedcostume("walk2.png"), blitedcostume("flying1.png"), blitedcostume("beggining.png")]
+                        else:
+                            print('body', cfolders[box])
+                            costume = cfolders[box]
+                            steveimages = [blitedcostume("walk1.png"), blitedcostume("walk2.png"), blitedcostume("flying1.png"), blitedcostume("beggining.png")]
+                    else:
+                        print('You do not have enough money to buy', cfolders[box])
+                        
+            if event.type == pygame.MOUSEBUTTONUP:
+                scrolldown=0
             if event.type == KEYDOWN:
                 if event.key == K_F4:
                     f4=1
@@ -378,6 +459,11 @@ def thestash():
                     ralt=1
                 if event.key == K_LALT:
                     lalt=1
+                if event.key == K_DOWN:
+                    schange=2
+                    #print('add')
+                if event.key == K_UP:
+                    schange=-2
             if event.type == KEYUP:
                 if event.key == K_F4:
                     f4=0
@@ -385,13 +471,29 @@ def thestash():
                     ralt=0
                 if event.key == K_LALT:
                     lalt=0
+                if event.key == K_DOWN:
+                    schange=0
+                if event.key == K_UP:
+                    schange=0
         if (ralt or lalt) and f4:
             endall()
-                    
-
-        screen.blit(stash, (0, 0))
+        #print(schange)
+        scrolly+=schange
+        if scrolly>76 or scrolly<screen.get_height()-cbg.get_height():
+            #print(scrolly, scrolly>76, scrolly<screen.get_height()-cbg.get_height())
+            scrolly-=schange
+        screen.blit(cbg, (53, scrolly))
+        #print()
+        #print((scrolly-(screen.get_height()-cbg.get_height()))/448)
+        screen.blit(cfg, (0, 0))
+        scrollby=    ((-((scrolly-(screen.get_height()-cbg.get_height()))/448)+1)   *(screen.get_height()-145-76))+76
+        screen.blit(scroll, (946, scrollby))
+        screen.blit(moneys, (934-moneys.get_width(), 30))
         pygame.display.update()
-
+    with open(os.path.dirname(sys.argv[0])+"/Img1\clothing1\costume.txt", 'w') as f:
+        f.seek(0)
+        f.write(costume+'\n'+costumeface)
+        f.close()
 
     
 def main():
@@ -509,7 +611,18 @@ def main():
 ##################################################################################################################################################################
 
 def Quit():
-    global die, stevex, stevey, steve, floor, invincible
+    print('you died')
+    global die, stevex, stevey, steve, floor, invincible, Type, clothing, spintokensl#, blitedcostume
+    def blitedcostume(Dir):
+        global costume, costumeface
+        bodydir, facedir=Dir, Dir
+        body, face=pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/clothing1/body/"+costume+"/"+bodydir), pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/clothing1/face/"+costumeface+"/"+facedir)
+        full=pygame.Surface((max(body.get_width(), face.get_width()), max(body.get_height(), face.get_height())), pygame.SRCALPHA, 32)
+        full = full.convert_alpha()
+        full.blit(face, (0, full.get_height()-face.get_height()))
+        full.blit(body, (0, full.get_height()-body.get_height()))
+        return full
+
     steve=pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1\dead.png")
     direction=random.choice([-1,1])
     screen.blit(bg1, (bg1x, bg1y))
@@ -518,9 +631,12 @@ def Quit():
     zapper_b.blit()
     for i in range(len(coins)):
         coins[i].blit()
+        
     screen.blit(pause, (width-pause.get_width(), 0))
     outlineit(0, 50, 2, 40, str(score).zfill(3), smallfont, (255,140, 0), 23)
     outlineit(0, 0, 2, 50, str(int(distance)).zfill(4)+" m", font, (160, 160, 160), 27)
+    for i in spintokensl:
+        i.blit()
     pygame.display.update()
     e=1
     while e:
@@ -547,7 +663,7 @@ def Quit():
         rotation+=.25
         m=stevey
     screen.blit(ss, (0, 0))
-    steve=pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1\end.png")
+    steve=blitedcostume("end.png")
 
     screen.blit(steve, (stevex, floor+steve.get_height()+20))
     pygame.display.update()
@@ -565,8 +681,13 @@ class Zapper():
     rect.x = x
     rect.y = y
     addx, addy = 0, 0
+    
     def setx(self, x):
         self.x = x
+        self.rect.x = x
+    def sety(self, y):
+        self.y = y
+        self.rect.y = y
     def spin(self, rect, amount):
 
         self.Object = pygame.transform.rotate(self.spinObj, amount)
@@ -577,10 +698,7 @@ class Zapper():
     
     def randompic(self):
         self.image = random.choice([os.path.dirname(sys.argv[0])+"/Img1/zap2.png", os.path.dirname(sys.argv[0])+"/Img1/zap3.png", os.path.dirname(sys.argv[0])+"/Img1\zap.png", os.path.dirname(sys.argv[0])+"/Img1\zap1.png"])#, "Img1\zap4.png"])
-        if  self.image == os.path.dirname(sys.argv[0])+"/Img1\zap4.png":
-            self.rotate = True
-        else:
-            self.rotate = False
+        self.rotate = self.image == os.path.dirname(sys.argv[0])+"/Img1\zap4.png"
         self.Object = pygame.image.load(self.image)
     def blit(self):
         if self.rotate:
@@ -600,56 +718,64 @@ class Zapper():
             x, y = self.x, self.y
             ourrect = self.rect
 
-
+        diefromz=0
+        
         if ourrect.colliderect( steverect ) and not invincible:
-            if (self.image == os.path.dirname(sys.argv[0])+"/Img1/zap2.png" or self.image == os.path.dirname(sys.argv[0])+"/Img1/zap3.png"):
+            if 1:#(self.image == os.path.dirname(sys.argv[0])+"/Img1/zap2.png" or self.image == os.path.dirname(sys.argv[0])+"/Img1/zap3.png"):
                 if ourrect.collidepoint(stevex, stevey):
                     rgb=Obj.get_at((int(fabs( stevex - x) ), int(fabs(stevey- y)))  )
                     if rgb != (255, 255, 255, 0) and rgb != (0, 0, 0, 255):
-                        pygame.image.save(screen, os.path.dirname(sys.argv[0])+"/Img1/screenshot.bmp")
-                        Quit()
+                        diefromz=1
                     #top right
                 elif ourrect.collidepoint(stevex + stevewidth,  stevey):
                     rgb=Obj.get_at(( (int(fabs(x-(stevex + stevewidth))))  , int(fabs(y-stevey)) ))
                     if rgb != (255, 255, 255, 0) and rgb != (0, 0, 0, 255):
-                        pygame.image.save(screen, os.path.dirname(sys.argv[0])+"/Img1/screenshot.bmp")
-                        Quit()
+                        diefromz=1
                     #bottom left
-
                 elif ourrect.collidepoint(stevex, stevey + steveheight  ):
                     rgb=Obj.get_at(( int(fabs(x-stevex) ), int(fabs(y-(stevey + steveheight)))) )
                     if rgb != (255, 255, 255, 0) and rgb != (0, 0, 0, 255):
-                        pygame.image.save(screen, os.path.dirname(sys.argv[0])+"/Img1/screenshot.bmp")
-                        Quit()
+                        diefromz=1
                     #bottom right
                 elif ourrect.collidepoint(stevex + stevewidth , stevey + steveheight  ):
                     rgb=Obj.get_at(        ((int(fabs(x-(stevex + stevewidth))) ,int(fabs( y-(stevey + steveheight)))) ) )
                     if rgb != (255, 255, 255, 0) and rgb != (0, 0, 0, 255):
-                        pygame.image.save(screen, os.path.dirname(sys.argv[0])+"/Img1/screenshot.bmp")
-                        Quit()
-            else:
+                        diefromz=1
+##            elif ourrect.colliderect(steverect):
+##                diefromz=1
+##                print('died from straight zapper')
+            if diefromz:
                 pygame.image.save(screen, os.path.dirname(sys.argv[0])+"/Img1/screenshot.bmp")
-                Quit()
+                #print('died from zapper')
+                Quit()                
 
                    
     def update(self):
-        global largesty, speed, floor
+        global largesty, speed, floor, Type, spintokens, spintokensl
         self.x-=speed
-        speed+=.0005
-        if self.x<=-largesty:
-            self.x = float(bg1.get_width())
-            self.y = float(random.randint(100, floor-self.Object.get_height()))
-            zaprand = random.randint(1, 4)
+        #speed+=.0005
+        if self.x<=-largesty and Type=='zapper':
+            if random.randint(0, 20)==0:
+                spintokensl.append(spintoken())
+                spintokensl[-1].setx(screen.get_width()*1.5)
+            self.x = screen.get_width()#float(bg1.get_width())
+            self.rect.x=self.x
+            #print(self.x)
+#            print('floor')
             self.randompic()
+            self.y = float(random.choice([100, ((100+(screen.get_height()-120-self.Object.get_height()))/2), screen.get_height()-120-self.Object.get_height()]))
+            self.rect.y=self.y
+            zaprand = random.randint(1, 4)
+            
         if  self.rotate:
-
+            print('You collected spintoken', self.spinamount+1)
             self.spinamount+=1
             randobj = self.spinObj.get_rect()
             randobj.x = self.x
             randobj.y = self.y
             self.spin(self.spinObj.get_rect(), self.spinamount)
-            
-        self.rect = self.Object.get_rect()
+        #print(self.x<=-largesty, Type=='zapper')
+        #self.rect = self.Object.get_rect()
         
         self.rect.x = self.x
         self.rect.y = self.y
@@ -677,10 +803,14 @@ class Coin():
     rect = CoinObject.get_rect()
     rect.x = x
     rect.y = y
-    spintoken=False
-    spintokenimage=pygame.image.load(os.path.dirname(sys.argv[0])+r"\Img1\spin\spin token.png")
+    #spintoken=False
+    #spintokenimage=pygame.image.load(os.path.dirname(sys.argv[0])+r"\Img1\spin\spin token.png")
+    #oamount=0
+    #oscillating=False
+    #oy=0
     def __init__(self):
-        self.spintoken=False
+
+        #self.spintoken=False
         self.x, self.y = random.randint(0, screen.get_width()), random.randint(0+125, self.floor)
         self.rect = self.CoinObject.get_rect()
         self.rect.x = self.x
@@ -688,35 +818,38 @@ class Coin():
         self.touch = False
         self.point = False
         self.tokenrandom=[1]
-        self.tokenrandom.extend([0]*20)
+        self.tokenrandom.extend([0]*40)
+#        self.tokenrandom=[1]
 #        print(len(self.tokenrandom))
     def changeimage(self):
         self.imgnum = (self.imgnum+1)%6
         self.CoinObject = self.imgs[self.imgnum]
         
     def update(self):
-        global speed
+#        print("oy", self.oy)
+        global speed, stevey, Type
         self.rect.x = self.x
         self.rect.y = self.y
         self.x-=(speed )
-        if self.x<= - self.CoinObject.get_width() *2:
+                
+        if self.x<= - self.CoinObject.get_width() *2 and respawncoins:
 #            print("back to right")
 #            print(len(self.tokenrandom))
-            if random.choice(self.tokenrandom):
-                self.spintoken=True
-#                print("token")
-            else:
-                self.spintoken=False
+##            if random.choice(self.tokenrandom):
+##                self.spintoken=False
+##
+##            else:
+##                self.spintoken=False
             floor = screen.get_height()-190
             self.x, self.y = screen.get_width(), random.randint(100, floor)
             self.touch = False
             self.rect.x = self.x
             self.rect.y = self.y
             self.point = False
+        
     def intersecting(self, steverect):
         global score, spintokens
         if self.rect.colliderect( steverect ):
-#            print("back to right")
             self.touch = True
             if self.spintoken:
                 spintokens+=1
@@ -724,32 +857,66 @@ class Coin():
                 score+=1
                 self.point = True
             floor = screen.get_height()-190
-            self.x, self.y = screen.get_width(), random.randint(100, floor)
-            self.rect.x = self.x
-            self.rect.y = self.y
-            self.touch = False
-            self.point = False
-#            print(len(self.tokenrandom))
-            if random.choice(self.tokenrandom):
-#                print("token")
-                self.spintoken=True
+            if respawncoins:
+                self.x, self.y = screen.get_width(), random.randint(100, floor)
+                self.rect.x = self.x
+                self.rect.y = self.y
+                self.touch = False
+                self.point = False
+                if random.choice(self.tokenrandom):
+                    self.spintoken=True
+                else:
+                    self.spintoken=False
             else:
-                self.spintoken=False
+                self.x= - self.CoinObject.get_width() *2 
                 
         return self.touch
 
     def blit(self):
-        global steverect
-        self.intersecting(steverect)
-        if not self.spintoken:
-            screen.blit(self.CoinObject, (self.x, self.y))
+        #global steverect
+        #self.intersecting(steverect)
+        #if not self.spintoken:
+        screen.blit(self.CoinObject, (self.x, self.y))
+        #else:
+            #screen.blit(self.spintokenimage, (self.x, self.y))
+
+class spintoken():
+#    x, y = random.randint(0, screen.get_width()), random.randint(0+125, floor)
+    def __init__(self):
+        global screen
+        self.image=pygame.image.load(os.path.dirname(sys.argv[0])+r"\Img1\spin\spin token.png")
+        self.y = random.randint(125, screen.get_height()-130)
+        self.rect = self.image.get_rect()
+
+    def setx(self, x):
+        self.x, self.rect.x=x, x
+
+    def update(self):
+        #print('spinupdate')
+        global stevey, spintokens, steverect, speed
+        self.rect.x, self.rect.y= self.x, self.y
+        if self.y>stevey:
+            self.y-=((self.y-stevey)/80)
         else:
-            screen.blit(self.spintokenimage, (self.x, self.y))
+            self.y+=((stevey-self.y)/80)
+        if self.rect.colliderect( steverect ):
+            spintokens+=1
+            #print('you got a token! ')
+            self.x=-self.image.get_width()
+        else:
+            self.x-=speed
+        if self.x<-self.image.get_width():
+            del self
+    def blit(self):
+        #print('blitted to', self.x, self.y)
+        screen.blit(self.image, (self.x, self.y) )       
+def get_immediate_subdirectories(dir):
+    return [name for name in os.listdir(dir)
+            if os.path.isdir(os.path.join(dir, name))]
+
+spintokensl=[]
 ifmain = True
 
-################################################################################################################################################################################################
-########################################################################################OPEN IMAGES!!!!!!!!!!!#####################################################################################
-################################################################################################################################################################################################
 bg1 = pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/bg6.jpg")
 bg2 = pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/bg6.jpg")
 pause = pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/pause.png")
@@ -765,11 +932,9 @@ try:
 except ValueError:
     distf, dists, distt = 0, 0, 0
 distf, dists, distt = int(float(distf)), int(float(dists)), int(float(distt))
-
 try:
     money = int(open(os.path.dirname(sys.argv[0])+'/Img1/money.txt', 'r').readlines()[0])
 except:
-    print("money error")
     money = 0
     open(os.path.dirname(sys.argv[0])+'/Img1/money.txt', 'w').write("0")
 pause.set_colorkey(pygame.Color(0, 0, 0))
@@ -778,32 +943,53 @@ font = pygame.font.Font(os.path.dirname(sys.argv[0])+"/Img1/New Athletic M54.ttf
 smallfont = pygame.font.Font(os.path.dirname(sys.argv[0])+"/Img1/New Athletic M54.ttf", 40)
 verysmallfont = pygame.font.Font(os.path.dirname(sys.argv[0])+"/Img1/New Athletic M54.ttf", 30)
 extremefont = pygame.font.Font(os.path.dirname(sys.argv[0])+"/Img1/New Athletic M54.ttf", 130)
-steve = pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/walk1.png")
+costumestxt=open(os.path.dirname(sys.argv[0])+"/Img1\clothing1\costume.txt", 'r')
+clines=costumestxt.readlines()
+#print(clines[0])
+costume=clines[0].rstrip()
+costumeface=clines[1].rstrip()
+costumestxt.close()
+
+#print((190)-steve.get_height())
 darker = pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/darker screen.png")
-##moneytxt = open(os.path.dirname(sys.argv[0])+'/Img1/money.txt', 'w')
-##moneytxt
-steveimages = [pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/walk1.png"), pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/walk2.png"), pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/flying1.png"), pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/beggining.png")]
+moneytxt = open(os.path.dirname(sys.argv[0])+'/Img1/money.txt', 'w')
+def blitedcostume(Dir):
+    global costume, costumeface
+    bodydir, facedir=Dir, Dir
+    body, face=pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/clothing1/body/"+costume+"/"+bodydir), pygame.image.load(os.path.dirname(sys.argv[0])+"/Img1/clothing1/face/"+costumeface+"/"+facedir)
+    full=pygame.Surface((max(body.get_width(), face.get_width()), max(body.get_height(), face.get_height())), pygame.SRCALPHA, 32)
+    full = full.convert_alpha()
+    #if facedir!='Kingly Crown' and (Dir == 'flying1.png' or Dir == 'beggining.png'):
+    #full.blit(face, (0, 0))
+    #else:
+        #print(Dir)
+    full.blit(face, (0, full.get_height()-face.get_height()))
+    #if facedir!='Kingly Crown' and (Dir == 'flying1.png' or Dir == 'beggining.png'):
+        #full.blit(body, (full.get_width()-body.get_width(), full.get_height()-body.get_height()))
+    #else:
+    full.blit(body, (0, full.get_height()-body.get_height()))
+#    print(full.get_width()-body.get_width(), full.get_width()-face.get_width())
+    return full
+steve = blitedcostume("walk1.png")
 
-invincibleframesl=304
+steveimages = [blitedcostume("walk1.png"), blitedcostume("walk2.png"), blitedcostume("flying1.png"), blitedcostume("beggining.png")]
 
-
-################################################################################################################################################################################################
-########################################################################################OPEN IMAGES!!!!!!!!!!!#####################################################################################
-################################################################################################################################################################################################
+invincibleframesl=200
 distance = 0
 score = 0
+rocketimgs=[pygame.image.load(os.path.dirname((sys.argv[0]))+"/Img1/rocket warning.png"), pygame.image.load(os.path.dirname((sys.argv[0]))+"/Img1/rocket warning almost.png"), pygame.image.load(os.path.dirname((sys.argv[0]))+"/Img1/rocket.png")]
+
 def endall():
-    global highscore, distf, dists, distt, score, money
+    global highscore, distf, dists, distt, moneytxt
 #    print("fini!!")
     highscore.seek(0)
     highscore.truncate()
     highscore.write(str(distf)+"\n"+str(dists)+"\n"+str(distt))
     highscore.close()
 
-    moneytxt = open(os.path.dirname(sys.argv[0])+'/Img1/money.txt', 'w')
     moneytxt.seek(0)
     moneytxt.truncate()
-    moneytxt.write(str(int(money+score)))
+    moneytxt.write(str(int(money)))
     moneytxt.close()
     
     pygame.quit()
@@ -821,21 +1007,29 @@ def updatehighscore():
         distf, dists, distt = distf, score, dists
     elif int(score)>int(distt):
         distf, dists, distt = distf, dists, score
+
+def rocket():
+    global rocketimgs, rocketstage, rockety, rocketx, stevey
+    if rocketstage==0 or rockety==1:
+        if rockety<stevey:
+            rockety+=.1  
+
+rockety=(screen.get_width()/2)-(rocketimgs[2].get_height()/2)
+rocketx=screen.get_width()-rocketimgs[0].get_width()
+rocketstage=0    
 bestscreens=[]
 ifmain=False
 counter = pygame.time.Clock()
 firsttime=True
 spintokens=0
 invincible=False
+rocketimgs=[pygame.image.load(os.path.dirname((sys.argv[0]))+"/Img1/rocket warning.png"), pygame.image.load(os.path.dirname((sys.argv[0]))+"/Img1/rocket warning almost.png"), pygame.image.load(os.path.dirname((sys.argv[0]))+"/Img1/rocket.png")]
+
+typechangeclock=pygame.time.Clock()
+
 while True:
 #####################################FLOOR?
-    moneytxt = open(os.path.dirname(sys.argv[0])+'/Img1/money.txt', 'w')
-    moneytxt.seek(0)
-    moneytxt.truncate()
     moneytxt.write(str(int(score+money)))
-    moneytxt.close()
-
-##    moneytxt.write(str(int(score+money)))
     money = int(score+money)
     floor = bg1.get_height()-190
     stevex, stevey = 100, floor
@@ -852,17 +1046,13 @@ while True:
     ifpause = False
     blitshell = False
     blitbullet = False
-    zapper_a = Zapper()
-    zapper_b = Zapper()
-    zapper_b.setx(screen.get_width()/2)
     steverect = steve.get_rect()
     speed = 7
     coins = []
-    i = 0
     die = False
-    while i < 5:
-        coins.append(Coin())
-        i+=1
+##    for i in range(5):
+##        coins.append(Coin())
+    
 #######################################################################################WHILE LOOP#############################################################################################
 
     updatehighscore()
@@ -879,7 +1069,7 @@ while True:
 ##        pygame.mixer.music.unpause()
     if ifmain and not firsttime:
         main()
-    bestscreens=[]
+    bestscreens=[]#spintoken()
     ifmain = True
     score = 0
     if not(mute):
@@ -888,9 +1078,70 @@ while True:
     distance = 0
     screenshotcount=0
     firsttime=False
-    invincibleframesl=304
+    invincibleframesl=100
+    typechangeclock.tick()
+    typechange=-1
+    Type = 'zapper'
+    respawncoins=False
+
+    zapper_a = Zapper()
+    zapper_b = Zapper()
+    zapper_a.setx(-zapper_a.Object.get_width())
+    zapper_b.setx(-zapper_b.Object.get_width())
+    
     while die != True:
-        if random.randint(0, 200)==50 or distance==0 or distance==5:
+#        if not count%50:
+#            for i in coins:
+#                print(i.x, end=', ')
+        #print(len(spintokensl))
+        for l in spintokensl:
+            l.update()
+            if l.x<-l.image.get_width():
+                spintokensl.remove(l)
+        typechange-=(typechangeclock.tick()/1000)
+        #print(typechange)
+        if Type=='coin':
+            coinsoffscreen=0
+            for i in coins:
+                if i.x<0:
+                    coinsoffscreen+=1
+            #print(coinsoffscreen, len(coins))
+            if coinsoffscreen==len(coins):
+                #print("change")
+                Type='coin'
+                typechange=-1
+        if typechange<0:
+            typechange=20
+#            print('changed from', Type, end='')
+            Type=['coin', 'zapper'][int(Type=='coin')]
+#            print(' to', Type)
+            if Type=='zapper':
+                zapper_a = Zapper()
+                zapper_b = Zapper()
+                zapper_a.setx(screen.get_width())
+                zapper_b.setx(screen.get_width()*1.5+(zapper_b.Object.get_width()/2)+(zapper_a.Object.get_width()/2))
+                zapper_a.sety(random.randint(125, floor-zapper_a.Object.get_height()))
+                zapper_b.sety(random.randint(125, floor-zapper_a.Object.get_height()))
+                respawncoins=False
+                #del coins
+            else:
+                coinrandomcoors=rcform()
+                coins=[]
+                x=0
+                for i in coinrandomcoors:
+                    x+=(1/8)
+                    if round(x)>6:
+                        x=0
+                    coins.append(Coin())
+                    coins[-1].x=i[0]
+                    coins[-1].y=i[1]
+                    coins[-1].spintoken=False
+                    coins[-1].imgnum=round(x)
+#                print(len(coins))
+                #del zapper_a, zapper_b
+                    
+
+        if random.randint(0, 200)==50 or distance==5 or firsttime:
             screenshotcount=distance
             screenradius=[180, 145]
             stevecenter=[stevex+(steve.get_width()/2), stevey+(steve.get_height()/2)]
@@ -899,23 +1150,32 @@ while True:
             bestscreens.append(bestscr)
         steverect.x = stevex
         steverect.y = stevey
+#        if Type=='coin':
         for i in range(len(coins)):
             coins[i].intersecting(steverect)
+            
         count+=1
         count%=5
         if count ==0:
             distance +=.5
+#            if Type=='coin':
             for i in range(len(coins)):
                 coins[i].changeimage()
-        
-        if zapper_a.intersecting(steverect):
+#        if Type=='zapper':
+        try:
+            if zapper_a.intersecting(steverect):
                 endall()
-
-        if zapper_b.intersecting(steverect):
+    
+            if zapper_b.intersecting(steverect):
                 endall()
-
-        for i in range(len(coins)):
-            coins[i].update()
+        except: pass
+                
+#        if Type=='coin':
+        try:
+            for i in range(len(coins)):
+                coins[i].update()
+        except: pass
+            
         walkcount+=1
 
         if int(walkcount%10) ==int(0) and stevey>=floor and keydown!="falling":
@@ -1006,26 +1266,36 @@ while True:
             
         if (ralt or lalt) and f4:
             endall()
-            
-        zapper_a.update()
-        zapper_b.update()
+#        if Type=='zapper':
+        try:
+            zapper_a.update()
+            zapper_b.update()
+        except Exception as z: print(z)
         
         if invincible:
             invincibleframesl-=1
             if invincibleframesl<=0:
                 invincible=False
-                invincibleframesl=304
+                invincibleframesl=200
 
         if ifpause == False and not die:
             screen.blit(bg1, (bg1x, bg1y))
             screen.blit(bg2, (bg2x, bg2y))
-            zapper_a.blit()
-            zapper_b.blit()
-            for i in range(len(coins)):
-                coins[i].blit()
+#            if Type=='zapper':
+            try:
+                zapper_a.blit()
+                zapper_b.blit()
+            except: pass
+            for l in spintokensl:
+                l.blit()
+#            if Type=='coin':
+            try:
+                for i in range(len(coins)):
+                    coins[i].blit()
+            except: pass
             if invincibleframesl%16==invincibleframesl%8:
                 screen.blit(steve, (stevex, stevey))
-                
+
             screen.blit(pause, (width-pause.get_width(), 0))
             outlineit(0, 50, 2, 40, str(score).zfill(3), smallfont, (255,140, 0), 23)
             
@@ -1099,6 +1369,7 @@ while True:
                             lalt=0
                 if (ralt or lalt) and f4:
                     endall()
+            typechangeclock.tick()
             if not(mute):
                 pygame.mixer.music.unpause()
                 
